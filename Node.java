@@ -13,6 +13,10 @@ public class Node {
     private int typeChild;
 
     public Node(){};
+    public Node(int x, int y){
+        this.x = x;
+        this.y = y;
+    };
     public Node(int x, int y, Node dad, List<Node> children) {
         this.x = x;
         this.y = y;
@@ -26,7 +30,6 @@ public class Node {
         this.dad = dad;
         this.typeChild = typeChild;
     }
-
     public int getX() {
         return x;
     }
