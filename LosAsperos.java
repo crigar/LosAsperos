@@ -1,17 +1,26 @@
 package unalcol.agents.examples.labyrinth.teseo.IA2018.LosAsperos;
-
-import unalcol.agents.examples.labyrinth.teseo.simple.SimpleTeseoAgentProgram;
+import unalcol.agents.AgentProgram;
+import unalcol.agents.Percept;
 import unalcol.agents.simulate.util.SimpleLanguage;
-
+import unalcol.agents.Action;
+import unalcol.types.collection.vector.Vector;
 import java.util.*;
 
 /**
+ * <p>Title: </p>
  *
- * @author LosAsperos
+ * <p>Description: </p>
+ *
+ * <p>Copyright: Copyright (c) 2018</p>
+ *
+ * <p>Company: Universidad Nacional de Colombia</p>
+ *
+ * @author Cristian Garcia - Daniel Caita
+ * @version 1.0
  */
-
-
-public class LosAsperos  extends SimpleTeseoAgentProgram {
+public class LosAsperos implements AgentProgram{
+    protected SimpleLanguage language;
+    protected Vector<String> cmd = new Vector<String>();
 
     private HashMap<Node, Integer> nodesSeen;
     private int orientation;
@@ -21,21 +30,19 @@ public class LosAsperos  extends SimpleTeseoAgentProgram {
     private Deque< Node > cells;
     private Queue< Node > path;
 
-
-
     public LosAsperos() {
-        nodesSeen = new HashMap();
+        nodesSeen = new HashMap<>();
         nodesSeen.put(new Node(0,0,null,null), 1);
 
         orientation = 0;
         currentNode = new Node(0,0, null,null);
-        orientationTranslator = new HashMap();
-        tree = new HashMap();
-        cells = new LinkedList();
-        path = new LinkedList();
+        orientationTranslator = new HashMap<>();
+        tree = new HashMap<>();
+        cells = new LinkedList<>();
+        path = new LinkedList<>();
 
         for (int i = 0; i < 4; i++) {
-            HashMap<Integer, Integer> couples = new HashMap();
+            HashMap<Integer, Integer> couples = new HashMap<>();
             if (i == 0){
                 couples.put(0, 0);
                 couples.put(1, 1);
@@ -63,13 +70,19 @@ public class LosAsperos  extends SimpleTeseoAgentProgram {
             orientationTranslator.put(i, couples);
         }
     }
-    public LosAsperos(   SimpleLanguage _language  ) {
-        super(_language);
+    public LosAsperos(SimpleLanguage _language  ) {
+        language = _language;
+    }
+    public void setLanguage(  SimpleLanguage _language ){
+        language = _language;
+    }
+    public void init(){
+        cmd.clear();
     }
 
-    public boolean getChildrenAndAdjacentNodes(boolean[] percepts){
-        List<Node> children = new LinkedList(); //nodos adyacentes al nodo actual que no sean hijos de otros nodos
-        HashMap<Node, Integer> adjacentNodes = new HashMap(); //nodos adyacentes al nodo actual sin importar que sean hijos de otros nodos
+    private void getChildrenAndAdjacentNodes(boolean[] percepts){
+        List<Node> children = new LinkedList<>(); //nodos adyacentes al nodo actual que no sean hijos de otros nodos
+        HashMap<Node, Integer> adjacentNodes = new HashMap<>(); //nodos adyacentes al nodo actual sin importar que sean hijos de otros nodos
         Node nodeUp = new Node(currentNode.getX(), currentNode.getY() + 1, currentNode, 0);
         Node nodeRight = new Node(currentNode.getX() + 1, currentNode.getY(), currentNode, 1);
         Node nodeDown = new Node(currentNode.getX(), currentNode.getY() - 1, currentNode, 2);
@@ -95,9 +108,8 @@ public class LosAsperos  extends SimpleTeseoAgentProgram {
         currentNode.setChildren( children  );//nuevos hijos del nodo actual
         tree.put(currentNode, adjacentNodes);//nuevos nodos adyacentes
 
-        return true;
     }
-    public int getCardinalityFromCurrentNode(Node nextMove){
+    private int getCardinalityFromCurrentNode(Node nextMove){
         int cardinality = -1;
         if (currentNode.getX() == nextMove.getX() && currentNode.getY() + 1 == nextMove.getY()) cardinality = 0;
         if (currentNode.getX() + 1 == nextMove.getX() && currentNode.getY() == nextMove.getY()) cardinality = 1;
@@ -105,11 +117,11 @@ public class LosAsperos  extends SimpleTeseoAgentProgram {
         if (currentNode.getX() - 1 == nextMove.getX() && currentNode.getY()  == nextMove.getY()) cardinality = 3;
         return cardinality;
     }
-    public void getPath(Node cellGoal){
+    private void getPath(Node cellGoal){
         //algoritmo de busqueda en amplitud
-        HashMap<Node, Integer> explored = new HashMap();
-        Queue< ArrayDeque<Node> > queue = new LinkedList();
-        ArrayDeque<Node> partialPath = new ArrayDeque();
+        HashMap<Node, Integer> explored = new HashMap<>();
+        Queue< ArrayDeque<Node> > queue = new LinkedList<>();
+        ArrayDeque<Node> partialPath = new ArrayDeque<>();
         partialPath.add(currentNode);
         queue.add(partialPath);
 
@@ -134,16 +146,51 @@ public class LosAsperos  extends SimpleTeseoAgentProgram {
         }
 
     }
-    public int getNumRotations(){
+    private void testEnclosedBox(){
+        boolean cellTest1 = false;
+        boolean cellTest2 = false;
+        boolean cellTest3 = false;
+        Node next = new Node();
+
+        next = new Node(currentNode.getX(), currentNode.getY() - 1);
+        cellTest1 = tree.containsKey(new Node(currentNode.getX() + 1, currentNode.getY() - 1));
+        cellTest2 = tree.containsKey(new Node(currentNode.getX(), currentNode.getY() - 2));
+        cellTest3 = tree.containsKey(new Node(currentNode.getX() - 1, currentNode.getY() - 1));
+        if (cellTest1 && cellTest2 && cellTest3 && nodesSeen.containsKey(next)){
+            cells.add(next);
+        }
+        next = new Node(currentNode.getX() - 1, currentNode.getY());
+        cellTest1 = tree.containsKey(new Node(currentNode.getX() - 1, currentNode.getY() - 1));
+        cellTest2 = tree.containsKey(new Node(currentNode.getX() - 2, currentNode.getY() ));
+        cellTest3 = tree.containsKey(new Node(currentNode.getX() - 1, currentNode.getY() + 1));
+        if (cellTest1 && cellTest2 && cellTest3 && nodesSeen.containsKey(next)){
+            cells.add(next);
+        }
+        next = new Node(currentNode.getX(), currentNode.getY() + 1);
+        cellTest1 = tree.containsKey(new Node(currentNode.getX() - 1, currentNode.getY() + 1));
+        cellTest2 = tree.containsKey(new Node(currentNode.getX() , currentNode.getY() + 2));
+        cellTest3 = tree.containsKey(new Node(currentNode.getX() + 1, currentNode.getY() + 1));
+        if (cellTest1 && cellTest2 && cellTest3 && nodesSeen.containsKey(next)){
+            cells.add(next);
+        }
+        next = new Node(currentNode.getX() + 1, currentNode.getY());
+        cellTest1 = tree.containsKey(new Node(currentNode.getX() + 1, currentNode.getY() + 1));
+        cellTest2 = tree.containsKey(new Node(currentNode.getX() + 2, currentNode.getY() ));
+        cellTest3 = tree.containsKey(new Node(currentNode.getX() + 1, currentNode.getY() - 1));
+        if (cellTest1 && cellTest2 && cellTest3 && nodesSeen.containsKey(next) ){
+            cells.add(next);
+        }
+    }
+    private int getNumRotations(){
         int numRotations = -1;
         if (path.size() == 0){
+            testEnclosedBox();
             //obtiene la sigiente celda objetivo mientras no la hayamos visitado
             Node cellGoal = cells.removeLast();
             while (tree.containsKey(cellGoal)) {
                 cellGoal = cells.removeLast();
             }
             getPath(cellGoal);//obtiene el camino mas corto desde el nodo actual hasta la celda objetivo
-
         }
         //de acuerdo al camino encontrado retorna las rotaciones de casilla en casilla hasta que haya llegado a la celda objetivo
         Node nextMove = path.remove();
@@ -156,10 +203,10 @@ public class LosAsperos  extends SimpleTeseoAgentProgram {
         currentNode = nextMove;
         return numRotations;
     }
-    public void addGoals(){
+    private void addGoals(){
         //esta funcion agrega a la pila "cells" los hijos de acuerdo a su prioridad
         //prioridad: hijo que menos rotaciones requiera
-        HashMap<Integer, Node> prioriti = new HashMap();
+        HashMap<Integer, Node> prioriti = new HashMap<>();
         for (Node node : currentNode.getChildren()) {
             int rotations = orientationTranslator.get(orientation).get(node.getTypeChild());
             prioriti.put(rotations, node);
@@ -169,8 +216,7 @@ public class LosAsperos  extends SimpleTeseoAgentProgram {
 
         }
     }
-    @Override
-    public int accion(boolean PF, boolean PD, boolean PA, boolean PI, boolean MT, boolean FAIL) {
+    private int accion(boolean PF, boolean PD, boolean PA, boolean PI, boolean MT, boolean FAIL) {
         //En caso de que encuentre la salida
         if (MT)return -1;
         boolean[] percepts = new boolean[6];
@@ -187,5 +233,33 @@ public class LosAsperos  extends SimpleTeseoAgentProgram {
         addGoals();
         //obtiene el numero de rotaciones necesarias para ir a la siguiente casilla
         return getNumRotations();
+    }
+
+    public Action compute(Percept p){
+        if( cmd.size() == 0 ){
+            boolean PF   = (boolean) p.getAttribute("front");
+            boolean PD   = (boolean) p.getAttribute("right");
+            boolean PA   = (boolean) p.getAttribute("back");
+            boolean PI   = (boolean) p.getAttribute("left");
+            boolean MT   = (boolean) p.getAttribute("treasure");
+            boolean FAIL = (boolean) p.getAttribute("fail");
+
+            int d = accion(PF, PD, PA, PI, MT, FAIL);
+            if (0 <= d && d < 4) {
+                for (int i = 1; i <= d; i++) {
+                    cmd.add("rotate"); //rotate
+                }
+                cmd.add("advance"); // advance
+            }
+            else {
+                cmd.add("die"); // die
+            }
+        }
+        String x = cmd.get(0);
+        cmd.remove(0);
+        return new Action(x);
+    }
+    public boolean goalAchieved( Percept p ){
+        return (boolean) p.getAttribute("treasure");
     }
 }
