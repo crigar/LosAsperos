@@ -13,6 +13,7 @@ import unalcol.types.collection.vector.Vector;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 /**
@@ -28,6 +29,7 @@ public class LosAsperos1 implements AgentProgram {
     private HashMap<Board, HashMap<Board, HashMap<String, Integer> >> minMaxTree = new HashMap<>();
     private int currentMax;
     private int currentMin;
+    private int numNodesEmptyToMinMax = 25;
 
     public LosAsperos1( String color ){
         this.color = color;
@@ -124,6 +126,7 @@ public class LosAsperos1 implements AgentProgram {
         for (Coordinates coor: currentBoard.getEmpityNodes()) {
             Node node = currentBoard.getBoardTree().get(coor);
             if (node.getEmpitySides().size() > 2){
+                Collections.shuffle(node.getEmpitySides());
                 for (String side: node.getEmpitySides()) {
                     Coordinates neighborCoor = node.getNeighbors().get(side);
                     Node neighbor = currentBoard.getBoardTree().get(neighborCoor);
@@ -142,12 +145,12 @@ public class LosAsperos1 implements AgentProgram {
 
     public String move(){
         String codeToMove = "";
-        if (currentBoard.getEmpityNodes().size() > 30){
+        if (currentBoard.getEmpityNodes().size() > numNodesEmptyToMinMax){
             codeToMove = initialMoves();
         }
 
         if (codeToMove.equals("") ){
-            if (currentBoard.getEmpityNodes().size() <= 30){
+            if (currentBoard.getEmpityNodes().size() <= numNodesEmptyToMinMax){
                 codeToMove = minMax();
             }else{
                 int randomIndexNode = (int) (Math.random() * (currentBoard.getEmpityNodes().size() - 1));

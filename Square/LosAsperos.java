@@ -14,6 +14,7 @@ import unalcol.types.collection.vector.Vector;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 /**
@@ -29,6 +30,7 @@ public class LosAsperos implements AgentProgram {
     private HashMap<Board, HashMap<Board, HashMap<String, Integer> >> minMaxTree = new HashMap<>();
     private int currentMax;
     private int currentMin;
+    private int numNodesEmptyToMinMax = 25;
 
     public LosAsperos( String color ){
         this.color = color;
@@ -125,6 +127,7 @@ public class LosAsperos implements AgentProgram {
         for (Coordinates coor: currentBoard.getEmpityNodes()) {
             Node node = currentBoard.getBoardTree().get(coor);
             if (node.getEmpitySides().size() > 2){
+                Collections.shuffle(node.getEmpitySides());
                 for (String side: node.getEmpitySides()) {
                     Coordinates neighborCoor = node.getNeighbors().get(side);
                     Node neighbor = currentBoard.getBoardTree().get(neighborCoor);
@@ -143,13 +146,12 @@ public class LosAsperos implements AgentProgram {
 
     public String move(){
         String codeToMove = "";
-        if (currentBoard.getEmpityNodes().size() > 30){
+        if (currentBoard.getEmpityNodes().size() > numNodesEmptyToMinMax){
             codeToMove = initialMoves();
         }
 
         if (codeToMove.equals("") ){
-            if (currentBoard.getEmpityNodes().size() <= 30){
-                System.out.println("entro");
+            if (currentBoard.getEmpityNodes().size() <= numNodesEmptyToMinMax){
                 codeToMove = minMax();
             }else{
                 int randomIndexNode = (int) (Math.random() * (currentBoard.getEmpityNodes().size() - 1));
@@ -211,21 +213,6 @@ public class LosAsperos implements AgentProgram {
         if( p.getAttribute(Squares.TURN).equals(color) ){
             boardSize = Integer.parseInt((String)p.getAttribute(Squares.SIZE));
             updateCurrentBoard();
-//            int i = 0;
-//            int j = 0;
-//            Vector<String> v = new Vector<String>();
-//            while(v.size()==0){
-//                i = (int)(size*Math.random());
-//                j = (int)(size*Math.random());
-//                if(((String)p.getAttribute(i+":"+j+":"+Squares.LEFT)).equals(Squares.FALSE))
-//                    v.add(Squares.LEFT);
-//                if(((String)p.getAttribute(i+":"+j+":"+Squares.TOP)).equals(Squares.FALSE))
-//                    v.add(Squares.TOP);
-//                if(((String)p.getAttribute(i+":"+j+":"+Squares.BOTTOM)).equals(Squares.FALSE))
-//                    v.add(Squares.BOTTOM);
-//                if(((String)p.getAttribute(i+":"+j+":"+Squares.RIGHT)).equals(Squares.FALSE))
-//                    v.add(Squares.RIGHT);
-//            }
             return new Action( move() );
         }
         return new Action(Squares.PASS);
