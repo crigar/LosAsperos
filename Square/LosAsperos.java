@@ -19,7 +19,7 @@ import java.util.HashMap;
 
 /**
  *
- * @author Jonatan
+ * @author Cristian Garcia y Daniel Caita
  */
 public class LosAsperos implements AgentProgram {
     protected String color;
@@ -28,8 +28,6 @@ public class LosAsperos implements AgentProgram {
     private int boardSize;
     private Board currentBoard;
     private HashMap<Board, HashMap<Board, HashMap<String, Integer> >> minMaxTree = new HashMap<>();
-    private int currentMax;
-    private int currentMin;
     private int numNodesEmptyToMinMax = 25;
 
     public LosAsperos( String color ){
@@ -37,6 +35,7 @@ public class LosAsperos implements AgentProgram {
     }
 
     public void createMinMaxTree(Board root, String turn){
+        //es una funcion recursiva, empieza con el tablero actualizado despues de cada turno del oponente
         if ( root == null ){
             root = currentBoard;
             turn = "max";
@@ -48,7 +47,9 @@ public class LosAsperos implements AgentProgram {
         }
         if (root.getEmpityNodes().size() == 0) return;
 
-
+        //genera las posibles jugadas (hijos) desde el tablero actual
+        //y las posibles jugadas de sus hijos hasta que el tablero haya sido llenado
+        //se poda el arbol, se hace el calculo minMax, y va subiendo los resultados para hacer la mejor jugada posible
 
         HashMap<Board, HashMap<String, Integer> > children = new HashMap<>();
         HashMap<Coordinates, HashMap<String, Boolean>> sidesSeen = new HashMap<>();
@@ -117,6 +118,7 @@ public class LosAsperos implements AgentProgram {
     }
 
     public String minMax(){
+        //crea el minMax, y devuelve el movimiento que deberia hacer en el tablero actual
         createMinMaxTree(null, null);
         return currentBoard.getBoardToMove().getCoordinatesToMove().getRow()+":"+
                 currentBoard.getBoardToMove().getCoordinatesToMove().getCol()+":"+
@@ -124,6 +126,7 @@ public class LosAsperos implements AgentProgram {
     }
 
     public String initialMoves(){
+        //recorre los nodos del tablero actual, para colocar una raya en donde no le deje cuadros al oponente
         for (Coordinates coor: currentBoard.getEmpityNodes()) {
             Node node = currentBoard.getBoardTree().get(coor);
             if (node.getEmpitySides().size() > 2){
@@ -146,14 +149,16 @@ public class LosAsperos implements AgentProgram {
 
     public String move(){
         String codeToMove = "";
+        //si la cantidad de nodos vacios es mayor al valor en el que se deberia empezar a hacer minMax se llama la funcion initialMoves()
         if (currentBoard.getEmpityNodes().size() > numNodesEmptyToMinMax){
             codeToMove = initialMoves();
         }
-
+        //cuando no haya mas rayas que poner sin dejar cuadro al oponente
         if (codeToMove.equals("") ){
+            //si la cantidad de nodos es apta para hacer minMax se hace minMax
             if (currentBoard.getEmpityNodes().size() <= numNodesEmptyToMinMax){
                 codeToMove = minMax();
-            }else{
+            }else{ //de lo contrario ponemos aleatoriamente una raya en el tablero hasta que se pueda hacer minMax
                 int randomIndexNode = (int) (Math.random() * (currentBoard.getEmpityNodes().size() - 1));
                 Coordinates coor = currentBoard.getEmpityNodes().get(randomIndexNode);
                 Node node = currentBoard.getBoardTree().get(coor);
@@ -165,6 +170,7 @@ public class LosAsperos implements AgentProgram {
     }
 
     public ArrayList<String> getEmpitySides(int i, int j){
+        //obtiene los lados donde no se ha puesto rayas en una celda (nodo)
         ArrayList<String> empitySides = new ArrayList();
         HashMap<String, Coordinates> neighbors = new HashMap<>();
         if(((String)p.getAttribute(i+":"+j+":"+Squares.LEFT)).equals(Squares.FALSE))
@@ -180,6 +186,7 @@ public class LosAsperos implements AgentProgram {
     }
 
     public HashMap<String, Coordinates> getNeighbors(int i, int j){
+        //devuelve los vecinos de un nodo en unas coordenadas dadas, String : top, bottom, right, left
         HashMap<String, Coordinates> neighbors = new HashMap<>();
         if (i - 1 >= 0 ) neighbors.put(Squares.TOP, new Coordinates(i - 1, j));
         if (i + 1 < boardSize ) neighbors.put(Squares.BOTTOM, new Coordinates(i + 1, j));
@@ -189,6 +196,7 @@ public class LosAsperos implements AgentProgram {
     }
 
     public void updateCurrentBoard(){
+        //actualizamos los nodos, los nodos vecinos de cada nodo y las rayas puestas actualmente en cada nodo
         if (currentBoard == null){
             currentBoard = new Board(new HashMap());
         }
@@ -211,8 +219,11 @@ public class LosAsperos implements AgentProgram {
             Thread.sleep(time);
         }catch(Exception e){}
         if( p.getAttribute(Squares.TURN).equals(color) ){
+            //guardamos el tamaño actual del tablero
             boardSize = Integer.parseInt((String)p.getAttribute(Squares.SIZE));
+            //cada vez que es nuestro turno actualizamos el tablero actual
             updateCurrentBoard();
+            //pedimos que movimiento hacer a la funcion move()
             return new Action( move() );
         }
         return new Action(Squares.PASS);

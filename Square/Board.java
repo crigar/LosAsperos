@@ -96,7 +96,8 @@ public class Board {
     public void setDad(Board dad) {
         this.dad = dad;
     }
-
+    // esta funcion elimina los lados de los nodos vecinos cuando uno coloca una raya,
+    //ya que la raya afecta el lado de dos nodos a la vez
     public void removeNeighborSides(Node node){
         if (node.getEmpitySides().size() == 1){
             String side = node.getEmpitySides().get(0);
@@ -128,7 +129,7 @@ public class Board {
         }
 
     }
-
+    //remueve la raya de un nodo dado, recordemos que los nodos guardan los lados vacios, donde no hay rayas
     public void removeSide(Coordinates coor, String side, HashMap<Coordinates, HashMap<String, Boolean>> sidesSeen){
         Node node = boardTree.get(coor);
         Coordinates neighborCoor = node.getNeighbors().get(side);
@@ -181,6 +182,8 @@ public class Board {
         return Objects.hash(boardTree, empityNodes);
     }
 
+
+    //clona todo el tablero
     @Override
     protected Board clone()  {
         HashMap<Coordinates, Node> newBoardTree = new HashMap<>();
@@ -192,6 +195,8 @@ public class Board {
         return newBoard;
     }
 
+    //clona el tablero unicamente teniendo en cuenta los nodos vacios los demas nodos los ignora, esto se hace
+    //para el minMax, para no clonar informacion inecesaria
     public Board cloneToTree(){
         HashMap<Coordinates, Node> newBoardTree = new HashMap<>();
         for (Coordinates coor: boardTree.keySet()) {
